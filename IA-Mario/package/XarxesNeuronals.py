@@ -12,27 +12,28 @@ class XarxesNetwork(object):
     def __init__(self, n_xarxes, inputs):
         """
         Crea n xarxes amb un nombre determinat d'inputs.
-        :param n_xarxes: Número de xarxes
+        :param n_xarxes: Nombre de xarxes
         :param inputs: Nombre d'inputs de cada xarxa.
-        L'output sempre seran dos valors.
         """
 
-        self.xarxa_nombre_n = 0 # Podrem sabre per quina xarxa anam
+        # Per coneixer sobre quina xarxa anam
+        self.xarxa_nombre_n = 0
         self.n_xarxes = n_xarxes
-        self.xarxes = []
+
         self.__inputs = inputs
         self.__generacio = 0
 
+        self.xarxes = []
         self.xarxes = self.generaNXarxesRandom(inputs, self.n_xarxes)
 
-        # Cream carpeta arrel
+        # Generació de la carpeta arrel
         dateTimeObj = datetime.now()
         timestampStr = dateTimeObj.strftime("%d_%b_%Y_(%H_%M_%S)")
         self.__path_Arrel = "Experiments/"+timestampStr
         mkdir(self.__path_Arrel)
 
         config = Singleton()
-        # Guardam informació
+        # Guarda la informació
         fw = FileWritter(self.__path_Arrel+"/info.txt")
 
         fw.writeString("Nombre de xarxes: " + str(len(self.xarxes)) + "\n")
@@ -51,13 +52,22 @@ class XarxesNetwork(object):
         fw.close()
 
     def generaNXarxesRandom(self, inputs, iteracions):
+        """
+        Genera xarxes aleatòries (hidden layers i nombre de neurones per capa)
+        """
         llista = []
+        config = Singleton()
         for i in range(iteracions):
-            nets = [inputs] # Nombre d'entrades
-            it = random.randint(1, 5) # Mínim dues hidden layers i com a màxim 5
+            nets = [inputs]             # Nombre d'entrades
+            it = random.randint(1, 5)   # Mínim dues hidden layers i com a màxim 5
             for i in range(it):
                 nets.append(random.randint(inputs, inputs * 3))
-            nets.append(2) # Sempre hi haurà una sortida
+
+            if config.moviments == 2:
+                nets.append(1)          # Una sortida
+            else:
+                nets.append(2)          # Dues sortides
+
             llista.append(Network(nets))
 
         return llista
@@ -74,13 +84,14 @@ class XarxesNetwork(object):
         return self.n_xarxes
 
     def getXarxaActual(self):
+        """Return xarxa actual"""
         return self.xarxes[self.xarxa_nombre_n]
 
     def seguentXarxa(self):
         """
         Prepara el programa per executar la següent xarxa.
-        :return: True si encara queden xarxes
-                 False en cas contrari
+        :return: 'True' si encara queden xarxes
+                 'False' en cas contrari
         """
         #print("La xarxa actual ha recorregut {}".format(self.xarxes[self.xarxa_nombre_n].get_Recorregut_Total()))
 
@@ -90,28 +101,29 @@ class XarxesNetwork(object):
         return True
 
     def funcio_Seleccio(self):
+        """
+        Duu a terme el procés de generar el fills on la majoria dels pares es s'ajusten millor a la mètrica establerta.
+        """
+        self.guardaInformacioGenActual()
         config = Singleton()
 
-        self.guardaInformacioGenActual()
-
         llista = []
-        if config.metrica == 1: # Temps
+        if config.metrica == 1:     # Temps
             for net in self.xarxes:
                 llista.append(net.get_Temps_Total())
 
-        elif config.metrica == 2: # Espai
+        elif config.metrica == 2:   # Espai
             for net in self.xarxes:
                 llista.append(net.get_Recorregut_Total())
 
-        elif config.metrica == 3: # Velocitat
+        elif config.metrica == 3:   # Velocitat
             for net in self.xarxes:
                 llista.append(net.get_Velocitat_Total())
-        else:
+        else:                       # Nedat
             for net in self.xarxes:
                 llista.append(net.get_Nedat_Total())
 
         llista = np.asarray(llista)
-        total = 0
         novaLlista = []
         if np.all((llista == 0)):
             print("Cas especial")
@@ -137,28 +149,22 @@ class XarxesNetwork(object):
             #print("S'han de generar {} xarxes aleatòries restants".format(config.init_xarxes - len(randomList)))
             total = config.init_xarxes - len(randomList)
 
-        # Genera n fills restants
-        #for i in range(total):
-            #novaLlista.append(Network([self.__inputs, self.__inputs * 3, self.__inputs * 3,  2]))
-
         novaLlista = novaLlista + self.generaNXarxesRandom(self.__inputs, total)
 
         #print("Tamany nova llista {}".format(len(novaLlista)))
 
         # Ens quedam amb la nova llista
         self.xarxes = novaLlista
-        #print("El tamany de la nova llista és de: {}".format(len(novaLlista)))
         # Reiniciam el comptador
         self.xarxa_nombre_n = 0
-        print("Ha acabat aquesta generació. Passam a la següent")
+        print("Ha acabat amb la generació {}. Passam a la següent".format(self.__generacio))
         self.__generacio = self.__generacio + 1
 
-
-    def between(self, valor, min, max):
-        return min <= valor and valor <= max
-
-
     def getMillorXarxaActual(self):
+        """
+        :return: La que es considera la millor xarxa de la generació en concret. Ho fa tenint en compte la mètrica
+        utilitzada.
+        """
         if len(self.xarxes) != 0:
             # Donam primer valor
             xarxa = self.xarxes[0]
@@ -185,6 +191,9 @@ class XarxesNetwork(object):
         return None
 
     def guardaInformacioGenActual(self):
+        """
+        Guarda la informació de la considerada millor xarxa.
+        """
         path = self.__path_Arrel+"/gen_"+str(self.__generacio)
         mkdir(path)
 
@@ -203,6 +212,9 @@ class XarxesNetwork(object):
         with open(file, 'rb') as input:
             net = pickle.load(input)
             return net
+
+
+    ### Getters
 
     @staticmethod
     def getVelocitat(espai, temps):

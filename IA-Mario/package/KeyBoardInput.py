@@ -1,4 +1,6 @@
-# https://gist.github.com/chriskiehl/2906125
+"""
+Font: https://gist.github.com/chriskiehl/2906125
+"""
 
 import win32con
 import win32api

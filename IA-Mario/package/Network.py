@@ -1,17 +1,17 @@
 """
-Network.py
-~~~~~~~~~~
-
 A module to implement the stochastic gradient descent learning
 algorithm for a feedforward neural network.  Gradients are calculated
 using backpropagation.  Note that I have focused on making the code
 simple, easily readable, and easily modifiable.  It is not optimized,
 and omits many desirable features.
+
+Font: http://neuralnetworksanddeeplearning.com/chap1.html
 """
 
 import numpy as np
 import copy
 import random
+from package.Singleton import Singleton
 
 class Network(object):
 
@@ -41,34 +41,20 @@ class Network(object):
         self.weights = [np.random.randn(y, x)
                         for x, y in zip(sizes[:-1], sizes[1:])]
 
-    def getInfo(self, getWeights = False):
-        print("----------------------------------")
-        print("Inputs: {}".format(self.sizes[0]))
-
-        # Hidden layers
-        # i = 1 perque ens botam els inputs
-        # len(self.sizes)-1 perque no volem passar pels outputs
-        # 1 anam incrementant i = i + 1
-        for i in range(1, len(self.sizes)-1, 1):
-            print("Hidden Layer {}, {} neurons".format(i, self.sizes[i]))
-            if getWeights:
-                for j in range(len(self.weights[i-1])):
-                    print("\tWeight neuron {}: {}".format(j + 1, self.weights[i-1][j]))
-
-        # Output
-        print("Outputs: {}".format(self.sizes[-1]))
-
     def getInfoString(self, getWeights = True):
+        """
+        :return: Retorna un string de la informació de la xarxa
+        """
         s = "Recorregut : " + str(self.__recorregut) + "\n"
         s = s + "Temps: " + str(self.__temps) + "\n"
         s = s + "Velocitat: " + str(self.__velocitat) + "\n"
         s = s + "Nedat: " + str(self.__nedat) + "\n"
 
         s = s + "\nInputs: " + str(self.sizes[0]) + "\n"
-        # Hidden layers
-        # i = 1 perque ens botam els inputs
-        # len(self.sizes)-1 perque no volem passar pels outputs
-        # 1 anam incrementant i = i + 1
+        # Recorrem les hidden layers
+        #   i = 1 perque ens botam els inputs
+        #   len(self.sizes) - 1 perque no volem passar pels outputs
+        #   1 anam incrementant i = i + 1
         for i in range(1, len(self.sizes) - 1, 1):
             s = s + "Hidden Layer " + str(i) + ", " + str(self.sizes[i]) + " neurons \n"
             if getWeights:
@@ -101,19 +87,30 @@ class Network(object):
         return fill
 
     def aplicarRenou(self):
+        """
+        Aplica renou a cada un dels pesos de la xarxa.
+        :param tipus: Si 1: Gaussià
+                      Si 2: Distribució uniforme
+        """
         # Renou Gaussià
         # sigma * np.random.rand() + mu
         # sigma = 1;  mu (mitja) = 0
 
-        # Hidden Layers + output. Recorrem les capes
+        config = Singleton()
 
+        # Hidden Layers + output. Recorrem les capes
         for i in range(1, len(self.sizes) - 1, 1): # Per cada hidden layer
             for j in range(len(self.weights[i - 1])): # Per cada neurona
                 for k in range(len(self.weights[i - 1][j])): # Canviam el pesos de cada una de les neurones
-                    #self.weights[i - 1][j][k] = self.weights[i - 1][j][k] + (np.random.randn() * random.randint(-10, 10))
-                    #Renou equiprobable
-                    self.weights[i - 1][j][k] = self.weights[i - 1][j][k] + random.randint(-10, 10)
+                    if config.renou == 1:
+                        # Renou gaussià
+                        self.weights[i - 1][j][k] = self.weights[i - 1][j][k] + np.random.randn()
+                    else:
+                        # Renou distribució uniforme
+                        self.weights[i - 1][j][k] = self.weights[i - 1][j][k] + random.randint(-10, 10)
 
+
+    ### Getters i setters
 
     def incrementaRecorregut(self):
         self.__recorregut = self.__recorregut + 1

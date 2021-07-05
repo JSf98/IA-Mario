@@ -1,6 +1,6 @@
 import cv2 as cv    # opencv
-from time import time
 import numpy as np  # numpy
+from time import time
 import math
 from tkinter import *
 from package.WindowCapture import WindowCapture
@@ -11,12 +11,17 @@ from package.Pyautogui import Pyautogui
 from package.KeyBoardInput import KeyBoardInput
 from package.Singleton import Singleton
 
+######################################################################
 # Per a la IA es fan les següents suposicions:
 # - En Mario mai s'acotarà
 # - Les monedes no són importants (ni les petites ni les gegants)
 # - En Mario mai tornarà gran
 # - En Mario mai entrarà dins tubs
+######################################################################
 
+#### Variables
+
+# Colors de la simplificació de les imatges
 colorMario = [0, 255, 0]
 colorEnemics = [0, 0, 255]
 colorObstacle = [33, 33, 33]
@@ -24,8 +29,11 @@ colorObstacle = [33, 33, 33]
 config = Singleton()
 on = True
 
-# Es el temps màxim que pot estar una IA viva ja que ens podem trobar
-# amb una xarxa que simplement va cap endarrere i no fa absolutament res
+printLoop = False
+
+teclaReinici = 'F1' # Modificar-ho en el cas d'utilitzar un altra 'slot' dins l'emulador
+
+# Es el temps màxim que pot estar una IA viva
 temps_max = 300 # Segons
 
 def selectROI(img, x, y, dx, dy):
@@ -69,14 +77,13 @@ def selectROI(img, x, y, dx, dy):
 
 def trobaObj(queue_in, queue_response):
     """
-    Cada un dels subprocessos d'aquest problema duu a terme aquest mètode.
-    Donada la coa d'entrada cerca els objectes dins la imatge. A la coa de sortida s'hi guardaràn els distints punts
+    Donada la coa d'entrada, cerca els objectes dins la imatge. A la coa de sortida s'hi guardaràn els distints punts
     que s'han trobat. En cas de no haver trobat cap punt, aquest serà array buid.
-    Format dels objectes de la coa queue_in: [objecte (que es vol capturar), imatge (on es vol cercar), umbral]
+
+    Format dels objectes de la coa queue_in: [plantilla (que es vol capturar), imatge (on es vol cercar), umbral]
     El procés acaba quan reb un array buid.
     :param queue_in: Coa d'entrada
     :param queue_response: Coa de sortida o de resposta
-    :return: null
     """
     array = queue_in.get() # Bloquetja
     while len(array) > 0:
@@ -87,62 +94,58 @@ def trobaObj(queue_in, queue_response):
         array = queue_in.get()
 
 def ferMoviment(queue_in, queue_out):
+    """
+    Donada la coa d'entrada, aplica els moviments respectius. Amb la coa de sortida donam pas al programa principal per
+    continuar les seues tasques.
+
+    Format dels objectes de la coa queue_in: [inputs*]
+    El procés acaba quan reb un array buid.
+    :param queue_in: Coa d'entrada
+    :param queue_response: Coa de sortida o de resposta
+    """
     output = queue_in.get() # Bloquetja
     while len(output) > 0:
-        '''
-        a = output[0]
-        if a == 0:
-            #KeyBoardInput.pressAndHold('d')
-            KeyBoardInput.press('d')
+        if config.moviments == 2:
+            if output[0] == 0:
+                KeyBoardInput.press('d')
+            else:
+                KeyBoardInput.press('c')
         else:
-            KeyBoardInput.press('c')
-        #KeyBoardInput.release('d')
-        '''
+            a = output[0]
+            b = output[1]
+
+            if a == 0 and b == 0:
+                pass
+            elif a == 0 and b == 1:
+                KeyBoardInput.press('c')
+            elif a == 1 and b == 0:
+                KeyBoardInput.press('d')
+            else:
+                KeyBoardInput.press('a')
 
         '''
-        a = output[0]
-        b = output[1]
-
-        # print("\tEntrada 1: {} aprox. {} \n\tEntrada 2: {} aprox. {}".format(output[0][0], output1, output[1][0], output2))
+            # Alternativa dels 4 moviments
         
-        if a == 0 and b == 0:
-            pass
-            #KeyBoardInput.pressAndHold('d')
-            #KeyBoardInput.press('c')
-        elif a == 0 and b == 1:
-            #KeyBoardInput.pressAndHold('a')
-            KeyBoardInput.press('c')
-        elif a == 1 and b == 0:
-            KeyBoardInput.pressAndHold('d')
-        else:
-            KeyBoardInput.pressAndHold('a')
-
-        KeyBoardInput.release('d', 'a')
+            if a == 0 and b == 0:
+                KeyBoardInput.press('d')
+            elif a == 0 and b == 1:
+                KeyBoardInput.press('a')
+            elif a == 1 and b == 0:
+                KeyBoardInput.pressAndHold('d')
+                KeyBoardInput.press('c')
+            else:
+                KeyBoardInput.pressAndHold('a')
+                KeyBoardInput.press('c')
+    
+            KeyBoardInput.release('d', 'a')
         '''
-
-        a = output[0]
-        b = output[1]
-
-        if a == 0 and b == 0:
-            KeyBoardInput.press('d')
-        elif a == 0 and b == 1:
-            KeyBoardInput.press('a')
-        elif a == 1 and b == 0:
-            KeyBoardInput.pressAndHold('d')
-            KeyBoardInput.press('c')
-        else:
-            KeyBoardInput.pressAndHold('a')
-            KeyBoardInput.press('c')
-
-        KeyBoardInput.release('d', 'a')
-
 
         queue_out.put("OK")
         output = queue_in.get()
 
 def filtraColors(captura):
     """
-    Filtratge pel nivell en concret: "Super Mario World - Donut Secret 1 (món 2)"
+    Filtratge pel nivell en concret: "Super Mario World - Donut Secret 1"
     :param captura: imatge la qual es vol fer el filtratge
     :return: mascara
     """
@@ -190,20 +193,21 @@ def filtraColors(captura):
     dilation = cv.dilate(erosion, kernel10, iterations=2)
     final_mask = cv.bitwise_or(final_mask, dilation)
 
-    # inverted_final_mask = cv.bitwise_not(final_mask)
-    # target = cv.bitwise_and(captura, captura, mask=final_mask)
     return final_mask
 
 def haMortMario(img):
-    # Si en Mario ha mort, la pantalla es torna color negre i per tant sabem que ha mort
+    """
+    :return: 'True' si en mario ha mort. Es coneix el valor ja que la pantalla es torna color obscura.
+    'False' en cas contrari.
+    """
     return not np.any(img)
 
 def doLine(img, n_linies, pos_x, pos_y, grau):
     """
     Donat un punt, crea els visors.
-    Si visor = 0: No obstacle
-    Si visor = 1: Obstacle
-    Si visor = 2: Enemic
+        Si visor = 0: No obstacle
+        Si visor = 1: Obstacle
+        Si visor = 2: Enemic
     :param img: Imatge principal
     :param n_linies: Nombre de visors
     :param pos_x: Punt de on començaran les linies
@@ -276,28 +280,16 @@ def doLine(img, n_linies, pos_x, pos_y, grau):
 
     return obstacles
 
-def existeixEnemic(enemics, rectangles, diferencia):
-    for i in rectangles:
-        punt = i.returnPoints()
-        for j in enemics:
-            dist = euclideanDistance(punt, j.returnXY())
-            if dist <= diferencia:
-                return True
-
-    return False
-
-
-def euclideanDistance(p, q):
-    return np.sqrt(np.sum(np.square(p-q)))
-
 def offTheProgram():
+    """
+    Atura el bucle intern del programa una vegada es crida.
+    """
     global on
     on = False
 
 def main():
     """
     Execució principal
-    :return: null
     """
     # Alerta! La pantalla que es vol capturar no pot estar minimitzada al iniciar l'execució
     window_name = 'Snes9X v1.53 for Windows'
@@ -332,7 +324,8 @@ def main():
     sub_img = captura                   # Dona un primer valor
 
     # Inicialització del temps pel càlcul dels FPS
-   # loop_time = time()
+    if printLoop:
+        loop_time = time()
 
     # Objectes que es volen capturar
     n_processos_mario = 2
@@ -390,7 +383,7 @@ def main():
         captura = wincap.get_screenshot()
 
         #print("Temps del bucle {} s".format(time() - start_time))
-        if haMortMario(captura) or next or (time() - start_time) > temps_max: # segons
+        if haMortMario(captura) or next or (time() - start_time) > temps_max:
             # Actualitzam informació
             network.getXarxaActual().set_Temps_Total(time() - start_time)
             network.getXarxaActual().set_Velocitat_Total(XarxesNetwork.getVelocitat(network.getXarxaActual().get_Recorregut_Total()
@@ -405,7 +398,7 @@ def main():
 
             # Reiniciam el temps
             start_time = time()
-            KeyBoardInput.press('F7')
+            KeyBoardInput.press(teclaReinici)
             KeyBoardInput.release('d', 'a')
 
         # Inserim els objectes que volem capturar
@@ -425,15 +418,15 @@ def main():
 
         # Es fa una copia de la captura
         target = captura.copy()
-        target[final_mask == 0] = 0         # Pintam el fons
-        target[final_mask == 255] = colorObstacle  # Pintam les pareds
+        target[final_mask == 0] = 0                 # Pintam el fons
+        target[final_mask == 255] = colorObstacle   # Pintam les pareds
 
         # Agafam els punts dels enemics
         rectangles_enemies = queue_enemies_out.get()
         for i in range(n_processos_enemics-1):
             rectangles_enemies = np.concatenate((rectangles_enemies, queue_enemies_out.get()))
             
-        # Significa hem trobat algún enemic
+        # Significa que hem trobat algún enemic
         if len(rectangles_enemies) > 0:
             for rec in rectangles_enemies:
                 target = rec.printRectangle(target, False)
@@ -487,9 +480,9 @@ def main():
 
             trobat_anteriorment = True
 
-        if punt_x_anterior == 72 or (punt_x_anterior == 250 and (time() - start_time) > 8):
+        if punt_x_anterior == 72 or (punt_x_anterior == 144 and (time() - start_time) > 8):
+            # print("Aquesta xarxa no té futur")
             next = True
-            #print("Aquesta xarxa no té futur")
             punt_x_anterior = -1
             punt_y_anterior = -1
             sub_img = cv.imread('defaultframe.png')
@@ -507,46 +500,42 @@ def main():
             output = network.getXarxaActual().feedforward(myinputs)
             queue_doMoves_out.get() # Bloqueja fil principal
 
-            '''
-            a = 0
-            if (output[0][0] > 0.5):
-                a = 1
+            if config.moviments == 2:
+                a = 0
+                if (output[0][0] > 0.5):
+                    a = 1
 
-            queue_doMoves.put([a])
-            if a == 0:
-                network.getXarxaActual().incrementaRecorregut()
+                queue_doMoves.put([a])
+                if a == 0:
+                    network.getXarxaActual().incrementaRecorregut()
+                else:
+                    network.getXarxaActual().incrementaVegadesC()
+
             else:
-                network.getXarxaActual().incrementaVegadesC()
-            '''
+
+                a = 0
+                b = 0
+                if (output[0][0] > 0.5):
+                    a = 1
+                if (output[1][0] > 0.5):
+                    b = 1
+                queue_doMoves.put([a, b])
+
+                if a == 1 and b == 0:
+                    network.getXarxaActual().incrementaRecorregut()
+                elif a == 1 and b == 1:
+                    network.getXarxaActual().decrementaRecorregut()
+                elif a == 0 and b == 1:
+                    network.getXarxaActual().incrementaVegadesC()
 
 
-            a = 0
-            b = 0
-            if (output[0][0] > 0.5):
-                a = 1
-            if (output[1][0] > 0.5):
-                b = 1
-            queue_doMoves.put([a, b])
-
-            '''
-            if a == 1 and b == 0:
-                network.getXarxaActual().incrementaRecorregut()
-            elif a == 1 and b == 1:
-                network.getXarxaActual().decrementaRecorregut()
-            elif a == 0 and b == 1:
-                network.getXarxaActual().incrementaVegadesC()
-            '''
-
-            if a == 0 and b == 0:
-                network.getXarxaActual().incrementaRecorregut()
-            elif a == 0 and b == 1:
-                network.getXarxaActual().decrementaRecorregut()
-            elif a == 1 and b == 0:
-                pass
-                #network.getXarxaActual().incrementaVegadesC()
-            else:
-                pass
-
+                '''
+                # Versió alternativa dels 4 moviments
+                if a == 0 and b == 0:
+                    network.getXarxaActual().incrementaRecorregut()
+                elif a == 0 and b == 1:
+                    network.getXarxaActual().decrementaRecorregut()
+                '''
 
         #cv.imshow('Captura', captura)
         #cv.imshow('Resultat', target)
@@ -566,8 +555,10 @@ def main():
             punt_y_anterior = -1
 
         # Mostra els FPS per consola
-        #print('FPS {}'.format(1 / (time() - loop_time)))
-        #loop_time = time()
+        if printLoop:
+            print('FPS {}'.format(1 / (time() - loop_time)))
+            loop_time = time()
+
         root.update()
 
     root.destroy()

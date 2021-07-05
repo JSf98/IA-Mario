@@ -10,8 +10,8 @@ class CatchObject:
          self.method = cv.TM_CCOEFF_NORMED
          #self.method = cv.TM_SQDIFF_NORMED
          self.needle_img = cv.imread(needle_img_path, cv.IMREAD_COLOR)
-         self.needle_w = self.needle_img.shape[1]  # Agafam width
-         self.needle_h = self.needle_img.shape[0]  # Agafam heigth
+         self.needle_w = self.needle_img.shape[1]  # Collim width
+         self.needle_h = self.needle_img.shape[0]  # Collim heigth
 
          self.scale_percent = scale_percent  # %
          self.needle_width_resized = int(self.needle_img.shape[1] * self.scale_percent / 100)
@@ -20,7 +20,14 @@ class CatchObject:
          self.need_img_resized = cv.resize(self.needle_img, self.dim, interpolation=cv.INTER_AREA)
 
      def findPosition(self, haystack_img, threshold=0.5):
-        #Si la imatge on volem cercar l'objecte és més petita que la del propi objecte. Retornam directament
+        """
+        Donada una imatge, retorna les posicions de l'objecte.
+        :param haystack_img: Imatge on es vol cercar
+        :param threshold: Percentatge acceptat
+        :return: Llista de objecte Rectangle.
+        """
+
+        # Si la imatge on volem cercar l'objecte és més petita que la del propi objecte. Retornam directament.
         if haystack_img.shape[0] <= self.needle_w or haystack_img.shape[1] <= self.needle_h:
             return []
 
@@ -56,6 +63,13 @@ class CatchObject:
         return rectangle_object
 
      def findPosition_reduce(self, haystack_img, threshold=0.5):
+         """
+         Donada una imatge, retorna les posicions de l'objecte. Internament duu a terme una reducció de la imatge
+         de cerca per tal d'aconseguir major rendiment de l'algoritme.
+         :param haystack_img: Imatge on es vol cercar
+         :param threshold: Percentatge acceptat
+         :return: Llista de objecte Rectangle.
+         """
          haystack_width = haystack_img.shape[1] * self.scale_percent / 100
          haystack_height = haystack_img.shape[0] * self.scale_percent / 100
          haystack_dim = (int(haystack_width), int(haystack_height))

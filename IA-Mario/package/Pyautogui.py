@@ -1,6 +1,5 @@
-import pyautogui # pip install pyautogui
-import pydirectinput # pip install pydirectinput
-from pywinauto import application # pip install pywinauto
+import pydirectinput                # pip install pydirectinput
+from pywinauto import application   # pip install pywinauto
 from pywinauto.findwindows import WindowAmbiguousError, WindowNotFoundError
 
 class Pyautogui():
@@ -10,16 +9,25 @@ class Pyautogui():
 
     @staticmethod
     def press(*args):
+        """
+        Pitja i amolla la tecla. Accepta tants d'arguments com es desitjin.
+        """
         for i in args:
             pydirectinput.press(i)
 
     @staticmethod
     def hold(*args):
+        """
+        Manté apretat una tecla. Accepta tants d'arguments com es desitjin.
+        """
         for i in args:
             pydirectinput.keyDown(i)
 
     @staticmethod
     def release(*args):
+        """
+        Amolla una tecla. Accepta tants d'arguments com es desitjin.
+        """
         for i in args:
             pydirectinput.keyUp(i)
 
