@@ -1,0 +1,1 @@
+Se puede utilizar esta carpeta para cargar las posibles redes neuronales. 

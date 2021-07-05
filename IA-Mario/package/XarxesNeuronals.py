@@ -207,13 +207,6 @@ class XarxesNetwork(object):
         with open(path+"/net.pkl", 'wb') as output: # Overwrites any existing file.
             pickle.dump(net, output, pickle.HIGHEST_PROTOCOL)
 
-    @staticmethod
-    def loadNet(file):
-        with open(file, 'rb') as input:
-            net = pickle.load(input)
-            return net
-
-
     ### Getters
 
     @staticmethod
