@@ -9,7 +9,7 @@ Inteligencia artificial que tiene como objetivo aprender a jugar mediante un alg
   * Cambiar, dentro de 'input configuration', a configuración 'wasd'
 * Nivel acuático: Donut Secret 1
 * Python 3.8
-* Monitor 1920x1080 (sino hay que ajustar valores de recorte al capturar la pantalla) 
+* Monitor 1920x1080 escala 100% (sino hay que ajustar valores de recorte al capturar la pantalla) 
 * CPU intel i7 gen 8 o similares (requisito mínimo recomendado)
 
 ## Como instalarlo
