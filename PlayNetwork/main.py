@@ -31,9 +31,9 @@ on = True
 
 printLoop = False
 
-teclaReinici = 'F7' # Modificar-ho en el cas d'utilitzar un altra 'slot' dins l'emulador
+teclaReinici = 'F1' # Modificar-ho en el cas d'utilitzar un altra 'slot' dins l'emulador
 
-path = "Experiments/30_Jun_2021_(13_54_23)/gen_4/net.pkl"
+path = "Experiments/06_Jul_2021_(11_39_55)/gen_17/net.pkl"
 
 def selectROI(img, x, y, dx, dy):
     """
@@ -118,9 +118,9 @@ def ferMoviment(queue_in, queue_out):
             elif a == 0 and b == 1:
                 KeyBoardInput.press('c')
             elif a == 1 and b == 0:
-                KeyBoardInput.press('d')
-            else:
                 KeyBoardInput.press('a')
+            else:
+                KeyBoardInput.press('d')
 
         '''
             # Alternativa dels 4 moviments
@@ -214,6 +214,9 @@ def doLine(img, n_linies, pos_x, pos_y, grau):
     :param grau: Grau total
     :return: Array amb els valors dels visors
     """
+    if grau > 360:
+        grau = 360
+
     if grau == 360:
         n_sectors = n_linies
     else:

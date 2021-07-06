@@ -16,14 +16,14 @@ class Singleton:
         def __init__(self):
             # Atributs relacionats amb la vista del nostre agent
             self.n_visors = 4
-            self.graus = 180
+            self.graus = 180 # 360º (default)
 
             ## Metriques:
             #   - Temps: 1
             #   - Espai: 2
             #   - Velocitat: 3
             #   - Nedat: 4 (default)
-            self.metrica = 2
+            self.metrica = 4
 
             # % de fills nous. Valor entre [0-1]
             # 1 Significarà que la a la pròxima generació

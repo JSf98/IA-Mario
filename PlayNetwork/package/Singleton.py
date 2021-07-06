@@ -14,7 +14,7 @@ class Singleton:
         def __init__(self):
             # Atributs relacionats amb la vista del nostre agent
             self.n_visors = 4
-            self.graus = 180
+            self.graus = 180 # 360º (default)
 
             ## Possibles moviments:
             #   - 2

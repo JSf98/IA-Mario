@@ -215,7 +215,7 @@ class XarxesNetwork(object):
 
     @staticmethod
     def getNedat(espai, vegadesC):
-        if vegadesC == 0:
+        if vegadesC == 0 or vegadesC == 1:
             return 0
         return espai/vegadesC
 

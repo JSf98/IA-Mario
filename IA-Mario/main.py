@@ -119,9 +119,9 @@ def ferMoviment(queue_in, queue_out):
             elif a == 0 and b == 1:
                 KeyBoardInput.press('c')
             elif a == 1 and b == 0:
-                KeyBoardInput.press('d')
-            else:
                 KeyBoardInput.press('a')
+            else:
+                KeyBoardInput.press('d')
 
         '''
             # Alternativa dels 4 moviments
@@ -215,6 +215,9 @@ def doLine(img, n_linies, pos_x, pos_y, grau):
     :param grau: Grau total
     :return: Array amb els valors dels visors
     """
+    if grau > 360:
+        grau = 360
+
     if grau == 360:
         n_sectors = n_linies
     else:
@@ -261,7 +264,7 @@ def doLine(img, n_linies, pos_x, pos_y, grau):
             if y < 0 or y >= img.shape[0] or x < 0 or x >= img.shape[1]:
                 break
 
-            if np.any(img[y][x] != colorMario) and np.any(img[y][x] != (255, 0, 0)):
+            if np.any(img[y][x] != colorMario) and np.any(img[y][x] != (255, 255, 255)):
                 # Significa que hi ha algun obstacle
                 if np.any(img[y][x]):
                     # Si es un enemic
@@ -272,7 +275,7 @@ def doLine(img, n_linies, pos_x, pos_y, grau):
                     break
 
             # Pintam les linies
-            #img[y][x] = 255, 0, 0
+            #img[y][x] = 255, 255, 255
 
             i = i + 1
 
@@ -522,12 +525,11 @@ def main():
                 queue_doMoves.put([a, b])
 
                 if a == 1 and b == 0:
-                    network.getXarxaActual().incrementaRecorregut()
-                elif a == 1 and b == 1:
                     network.getXarxaActual().decrementaRecorregut()
+                elif a == 1 and b == 1:
+                    network.getXarxaActual().incrementaRecorregut()
                 elif a == 0 and b == 1:
                     network.getXarxaActual().incrementaVegadesC()
-
 
                 '''
                 # Versió alternativa dels 4 moviments
